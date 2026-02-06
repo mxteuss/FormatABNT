@@ -48,3 +48,6 @@ Fonte: Times New Roman, tamanho 12
 Alinhamento: Centralizado (elementos pré-textuais)  
 Espaçamento: Simples  
 Título: Negrito e Maíusculo  
+
+# 
+Se este projeto te ajudou, dê uma estrela :)
