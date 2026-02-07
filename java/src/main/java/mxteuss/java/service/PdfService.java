@@ -3,13 +3,15 @@ package mxteuss.java.service;
 import lombok.Data;
 import mxteuss.java.model.PdfModel;
 import org.openpdf.text.*;
-import org.openpdf.text.pdf.BaseFont;
+
+import org.openpdf.text.pdf.ColumnText;
 import org.openpdf.text.pdf.PdfContentByte;
 import org.openpdf.text.pdf.PdfWriter;
 import org.springframework.stereotype.Service;
-
+import org.openpdf.text.pdf.BaseFont;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.util.Objects;
 
 @Data
 @Service
@@ -24,18 +26,17 @@ public class PdfService {
             PdfWriter writer = PdfWriter.getInstance(document, outputStream);
             document.setMargins(
                     72f,
-                    56.7f,
+                    50f,
                     85.05f,
-                    56.7f
+                    50f
             );
             document.open();
 
             Font fontNormal = new Font(Font.TIMES_ROMAN, 12, Font.NORMAL);
+            Font fontItalic = new Font(Font.ITALIC, 12, Font.TIMES_ROMAN);
             Font fontBold = new Font(Font.TIMES_ROMAN, 14, Font.BOLD);
-            Font fontItalic = new Font(Font.TIMES_ROMAN, 12, Font.ITALIC);
 
             // ---------------------------------// CAPA ------------------------------------------------------------
-
             Paragraph instituicao = new Paragraph(pdfModel.getInstituicao().toUpperCase(), fontBold);
                 instituicao.setAlignment(Paragraph.ALIGN_CENTER);
                 instituicao.setSpacingBefore(50f);
@@ -54,24 +55,19 @@ public class PdfService {
                 titulo.setAlignment(Paragraph.ALIGN_CENTER);
                 titulo.setSpacingBefore(180f);
                 document.add(titulo);
-                System.out.println(pdfModel.getCidade());
 
                 PdfContentByte canvas = writer.getDirectContent();
 
-
                 canvas.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_ROMAN, BaseFont.CP1252, BaseFont.NOT_EMBEDDED), 12);
-                float PosicaoCidade = 100f;
-                float PosicaoAno = 85f;
-
                 float Centro = PageSize.A4.getWidth() / 2;
 
             canvas.showTextAligned(PdfContentByte.ALIGN_CENTER,
                     pdfModel.getCidade().toUpperCase(),
-                    Centro, PosicaoCidade,0);
+                    Centro, 100f,0);
 
             canvas.showTextAligned(PdfContentByte.ALIGN_CENTER,
                     pdfModel.getAno(),
-                    Centro, PosicaoAno,0);
+                    Centro, 85f,0);
 
 // ---------------------------------// FOLHA DE ROSTO ------------------------------------------------------------
             document.newPage();
@@ -79,40 +75,66 @@ public class PdfService {
             document.add(nome);
             document.add(titulo);
 
+            ColumnText ct = new ColumnText(canvas);
+
+            ct.setSimpleColumn( 226.8f,
+                    200f,
+                    PageSize.A4.getWidth() - 85.05f,
+                   400f);
+            ct.setAlignment(Element.ALIGN_RIGHT);
+
             Paragraph paragraph =  new Paragraph(String.format("%s para obtenção do título de %s em %s apresentado à %s ",
-                    pdfModel.getTipoTrabalho(),
+                    Objects.equals(pdfModel.getTipoTrabalho(), "TCC") ? "Trabalho de Conclusão de Curso" : pdfModel.getTipoTrabalho(),
                     pdfModel.getObjetivo(),
                     pdfModel.getCurso(),
                     pdfModel.getInstituicao()), fontNormal);
             paragraph.setAlignment(Paragraph.ALIGN_RIGHT);
-            paragraph.setSpacingBefore(50f);
+            paragraph.setSpacingBefore(80f);
+            ct.addElement(paragraph);
 
-            document.add(paragraph);
-
-            Paragraph orientador = new Paragraph("Orientador:" + pdfModel.getOrientador(), fontNormal);
+            Paragraph orientador = new Paragraph("Orientador(a): " + pdfModel.getOrientador(), fontNormal);
             orientador.setAlignment(Paragraph.ALIGN_RIGHT);
             orientador.setSpacingBefore(40f);
+            ct.addElement(orientador);
 
-            document.add(orientador);
+            try{
+                ct.go();
+            }catch(Exception e){
+                System.out.println("Error:" + e.getMessage());
+            }
+
             canvas.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_ROMAN, BaseFont.CP1252, BaseFont.NOT_EMBEDDED), 12);
-
             canvas.showTextAligned(PdfContentByte.ALIGN_CENTER,
                     pdfModel.getCidade().toUpperCase(),
-                    Centro, PosicaoCidade,0);
+                    Centro, 100f,0);
 
             canvas.showTextAligned(PdfContentByte.ALIGN_CENTER,
                     pdfModel.getAno(),
-                    Centro, PosicaoAno,0);
+                    Centro, 85f,0);
 
 
             // ---------------------------------// DEDICATÓRIA ------------------------------------------------------------
             document.newPage();
 
+            ColumnText ct1 = new ColumnText(canvas);
+
+            ct1.setSimpleColumn( 226.8f,
+                    190f,
+                    PageSize.A4.getWidth() - 85.05f,
+                    56.7f);
+            ct1.setAlignment(Element.ALIGN_RIGHT);
+
             Paragraph dedicatoria = new Paragraph(pdfModel.getDedicatoria(), fontNormal);
             dedicatoria.setAlignment(Paragraph.ALIGN_RIGHT);
-            dedicatoria.setSpacingBefore(200f);
+            ct1.addElement(dedicatoria);
 
-            document.add(dedicatoria);
+            try{
+                ct1.go();
+            }
+            catch (DocumentException e) {
+                System.out.println("Error:" + e.getMessage());
+            }
+
             // ---------------------------------// AGRADECIMENTOS ------------------------------------------------------------
             document.newPage();
 
@@ -129,9 +151,14 @@ public class PdfService {
 
             Paragraph epigrafe = new Paragraph(pdfModel.getEpigrafe(), fontItalic);
             epigrafe.setAlignment(Paragraph.ALIGN_RIGHT);
-            epigrafe.setSpacingBefore(290f);
-            document.add(epigrafe);
+            ct1.addElement(epigrafe);
 
+            try{
+                ct1.go();
+            }
+            catch (DocumentException e) {
+                System.out.println("Error:" + e.getMessage());
+            }
 
             // ---------------------------------// RESUMO ------------------------------------------------------------
             document.newPage();
@@ -142,13 +169,17 @@ public class PdfService {
             resumo.setAlignment(Paragraph.ALIGN_CENTER);
             resumo.setSpacingBefore(50f);
 
+            Paragraph palavrasChave = new Paragraph();
+            palavrasChave.add(new Chunk("Palavras-chave:  ", FontFactory.getFont(FontFactory.TIMES_ROMAN, 12, Font.BOLD) ));
+            palavrasChave.add(new Chunk(pdfModel.getKeywords()));
+            palavrasChave.setAlignment(Paragraph.ALIGN_CENTER);
+            palavrasChave.setSpacingBefore(58.05f);
+
+
             document.add(titulo4);
             document.add(resumo);
+            document.add(palavrasChave);
 
-            canvas.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_ROMAN, BaseFont.CP1252, BaseFont.NOT_EMBEDDED), 12);
-            canvas.showTextAligned(PdfContentByte.ALIGN_CENTER,
-                    "Palavras-chave:" + pdfModel.getKeywords().replace(",", "."),
-                    Centro, PosicaoCidade,0);
 
             // ---------------------------------// ABSTRACT ------------------------------------------------------------
             document.newPage();
@@ -159,13 +190,16 @@ public class PdfService {
             resumoEn.setAlignment(Paragraph.ALIGN_CENTER);
             resumoEn.setSpacingBefore(50f);
 
+            Paragraph keywords = new Paragraph();
+            keywords.add(new Chunk("Keywords:  ", FontFactory.getFont(FontFactory.TIMES_ROMAN, 12, Font.BOLD) ));
+            keywords.add(new Chunk(pdfModel.getKeywords()));
+            keywords.setAlignment(Paragraph.ALIGN_CENTER);
+            keywords.setSpacingBefore(58.05f);
             document.add(titulo5);
             document.add(resumoEn);
+            document.add(keywords);
 
-            canvas.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_ROMAN, BaseFont.CP1252, BaseFont.NOT_EMBEDDED), 12);
-            canvas.showTextAligned(PdfContentByte.ALIGN_CENTER,
-                    "Keywords:" + pdfModel.getKeywords().replace(",", "."),
-                    Centro, PosicaoCidade,0);
+
 
 
             document.close();
