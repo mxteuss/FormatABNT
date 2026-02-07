@@ -110,7 +110,7 @@ public class PdfService {
 
             Paragraph dedicatoria = new Paragraph(pdfModel.getDedicatoria(), fontNormal);
             dedicatoria.setAlignment(Paragraph.ALIGN_RIGHT);
-            dedicatoria.setSpacingBefore(50f);
+            dedicatoria.setSpacingBefore(200f);
 
             document.add(dedicatoria);
             // ---------------------------------// AGRADECIMENTOS ------------------------------------------------------------
@@ -121,7 +121,6 @@ public class PdfService {
             Paragraph agradecimentos = new  Paragraph(pdfModel.getAgradecimentos(), fontNormal);
             agradecimentos.setAlignment(Paragraph.ALIGN_CENTER);
             agradecimentos.setSpacingBefore(50f);
-
             document.add(titulo3);
             document.add(agradecimentos);
 
@@ -130,12 +129,13 @@ public class PdfService {
 
             Paragraph epigrafe = new Paragraph(pdfModel.getEpigrafe(), fontItalic);
             epigrafe.setAlignment(Paragraph.ALIGN_RIGHT);
-            epigrafe.setSpacingBefore(140f);
+            epigrafe.setSpacingBefore(290f);
             document.add(epigrafe);
 
 
             // ---------------------------------// RESUMO ------------------------------------------------------------
             document.newPage();
+
             Paragraph titulo4 = new Paragraph("RESUMO", fontBold);
             titulo4.setAlignment(Paragraph.ALIGN_CENTER);
             Paragraph resumo = new  Paragraph(pdfModel.getResumo(), fontNormal);
@@ -156,8 +156,9 @@ public class PdfService {
             Paragraph titulo5 = new Paragraph("ABSTRACT", fontBold);
             titulo5.setAlignment(Paragraph.ALIGN_CENTER);
             Paragraph resumoEn = new  Paragraph(pdfModel.getResumoEn(), fontNormal);
-            resumo.setAlignment(Paragraph.ALIGN_CENTER);
-            resumo.setSpacingBefore(50f);
+            resumoEn.setAlignment(Paragraph.ALIGN_CENTER);
+            resumoEn.setSpacingBefore(50f);
+
             document.add(titulo5);
             document.add(resumoEn);
 
